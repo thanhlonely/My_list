@@ -9,12 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Cấp quyền ghi trực tiếp tại đây
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          persist-credentials: true # Giữ thông tin đăng nhập
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,11 +29,8 @@ jobs:
 
       - name: Commit and Push changes
         run: |
-          git config --global user.name "github-actions[bot]"
+          git config --local user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add playlist.m3u
           git commit -m "Auto-update playlist" || exit 0
-          # Các lệnh mới để xử lý dứt điểm lỗi rejected
-          git fetch origin main
-          git reset --soft origin/main
-          git push origin main --force
+          git push -f origin main # Ép buộc đẩy file lên
