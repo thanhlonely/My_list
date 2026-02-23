@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # Đã sửa từ python-python thành python-version
+          python-version: '3.10' # Đã sửa lỗi python-python mà GitHub cảnh báo trong ảnh của bạn
 
       - name: Install dependencies
         run: pip install requests beautifulsoup4 cloudscraper
@@ -29,5 +29,5 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add playlist.m3u
           git commit -m "Auto-update playlist" || exit 0
-          git pull --rebase origin main # Thêm dòng này để tránh lỗi rejected
+          git pull --rebase origin main
           git push
