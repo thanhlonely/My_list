@@ -8,14 +8,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions: # Thêm dòng này để cấp quyền ghi trực tiếp trong file
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Lấy toàn bộ lịch sử để tránh lỗi fetch
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # Đã sửa lỗi python-python mà GitHub cảnh báo trong ảnh của bạn
+          python-version: '3.10'
 
       - name: Install dependencies
         run: pip install requests beautifulsoup4 cloudscraper
@@ -29,5 +33,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add playlist.m3u
           git commit -m "Auto-update playlist" || exit 0
-          git pull --rebase origin main
-          git push
+          git push origin main --force
