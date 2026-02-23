@@ -1,26 +1,59 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
-# Cấu hình
-SOURCE_URL = 'https://trang-web-chi-dinh.com' # Thay bằng trang bạn muốn lấy
+# Giả lập trình duyệt để không bị chặn
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://90phutit.cc/'
+}
+
+SOURCE_URL = 'https://90phutit.cc/'
 OUTPUT_FILE = 'playlist.m3u'
 
 def get_streams():
+    streams = []
     try:
-        response = requests.get(SOURCE_URL)
+        response = requests.get(SOURCE_URL, headers=HEADERS, timeout=15)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Logic tìm link: Bạn cần tùy chỉnh phần này dựa trên cấu trúc trang web
-        # Ví dụ: Tìm tất cả các thẻ <a> có chứa link .m3u8
-        streams = []
-        for a in soup.find_all('a', href=True):
-            if '.m3u8' in a['href']:
-                title = a.text.strip() or "Kênh không tên"
-                link = a['href']
+
+        # 1. Tìm các trận đấu đang diễn ra (thường nằm trong thẻ có class liên quan đến 'match' hoặc 'item')
+        # Lưu ý: Cấu trúc class có thể thay đổi theo thời gian
+        items = soup.find_all(['div', 'a'], class_=re.compile(r'match|item|live', re.I))
+
+        for item in items:
+            title = ""
+            link = ""
+            
+            # Lấy tên trận đấu
+            name_tag = item.find(['h3', 'span', 'p'], class_=re.compile(r'name|title', re.I))
+            if name_tag:
+                title = name_tag.get_text(strip=True)
+            
+            # Lấy link chi tiết trận đấu
+            if item.name == 'a' and item.has_attr('href'):
+                link = item['href']
+            else:
+                a_tag = item.find('a', href=True)
+                if a_tag:
+                    link = a_tag['href']
+
+            if title and link:
+                # Đảm bảo link là tuyệt đối
+                if link.startswith('/'):
+                    link = SOURCE_URL.rstrip('/') + link
+                
+                # Vì link trực tiếp .m3u8 thường bị ẩn sâu trong iframe, 
+                # ở mức độ đơn giản, ta sẽ lưu link trang xem trực tiếp.
+                # Nếu muốn lấy .m3u8, cần một bước xử lý Selenium/Headless Browser phức tạp hơn.
                 streams.append((title, link))
-        return streams
+
+        # Loại bỏ các link trùng lặp
+        return list(set(streams))
+
     except Exception as e:
-        print(f"Lỗi khi lấy dữ liệu: {e}")
+        print(f"Lỗi: {e}")
         return []
 
 def save_to_m3u(streams):
@@ -31,7 +64,10 @@ def save_to_m3u(streams):
             f.write(f"{link}\n")
 
 if __name__ == "__main__":
+    print("Đang quét dữ liệu từ 90phut...")
     data = get_streams()
     if data:
         save_to_m3u(data)
-        print("Đã cập nhật file .m3u thành công!")
+        print(f"Thành công! Đã tìm thấy {len(data)} trận đấu.")
+    else:
+        print("Không tìm thấy dữ liệu hoặc bị chặn.")
