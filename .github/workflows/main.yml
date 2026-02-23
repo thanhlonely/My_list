@@ -2,23 +2,23 @@ name: Update M3U Playlist
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Chạy mỗi 6 tiếng một lần
-  workflow_dispatch: # Cho phép bấm nút chạy thủ công
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-python: '3.9'
+          python-version: '3.10' # Đã sửa từ python-python thành python-version
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install requests beautifulsoup4 cloudscraper
 
       - name: Run update script
         run: python update_m3u.py
